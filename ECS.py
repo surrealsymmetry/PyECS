@@ -1,8 +1,7 @@
-
 class Entity:
     def __init__(self):
         self.components = {}
-        self.id = Rack.fresh_id("Entity")
+
     def grant(self, c):
         self.components[c.key] = c
         c.entity = self
@@ -14,48 +13,50 @@ class Component:
     def __init__(self, key):
         assert type(key) is str
         self.key = key
-        self.id = Rack.fresh_id("Component")
+
+
+class System:
+    def __init__(self, key_profile):
+        self.key_profile = key_profile  # a tuple of key strings
 
 
 class Rack:
-    tracked_keys = {}
-
-    @staticmethod
-    def fresh_id(key):
-        if key not in Rack.tracked_keys:
-            Rack.tracked_keys[key] = 0
-        fresh_id = "{}_{}".format(key, Rack.tracked_keys[key])
-        Rack.tracked_keys[key] += 1
-        return fresh_id
-
     def __init__(self):
         self.entities = {}
         self.components = {}
+        self.systems = {}
 
     def __repr__(self):  # overrides the output of print(rack_object)
-        component_counter = 0
-        key_list = ""
-        tally_dict = {}
+        msg = 0
         for key in self.components:
-            component_counter += len(self.components[key])
-            if key not in tally_dict.keys():
-                tally_dict[key] = 0
-            tally_dict[key] += len(self.components[key])
-            key_list = key_list + ("\n\t\t\t\t" + str(tally_dict[key]) + "  '" + str(key) + "'")
-        msg = "\tE:\t" + str(len(self.entities)) + "\n\tC:\t" + str(len(self.components)) + " keys\t" + str(
-            component_counter) + " components" + key_list
+            msg += len(self.components[key])
+        msg = "\n\tC|\t" + str(msg) + "\t({} keys)".format(len(self.components))
+        msg = "\n\tE|\t"+str(len(self.entities)) + msg + "\n\tS|\t"+str(len(self.systems))
         return msg
 
-    def request_entity(self):
-        e = Entity()
-        self.entities[e.id] = e
-        return e
+    registry_keyring = {}
 
-    def request_component(self, key):
-        c = Component(key)
-        if c.key in self.components.keys():
-            self.components[c.key].append(c)  # appending to the table that is the value of the key
+    @staticmethod
+    def fresh_id(key): # keys for this
+        if key not in Rack.registry_keyring:
+            Rack.registry_keyring[key] = 0
+        fresh_id = "{}_{}".format(key, Rack.registry_keyring[key])
+        Rack.registry_keyring[key] += 1
+        return fresh_id
+
+
+    def register(self, o):
+        o.id = self.fresh_id(type(o).__name__)
+        if type(o) is Entity:
+            self.entities[o.id] = o
+        elif type(o) is System:
+            self.systems[o.id] = o
+        elif type(o) is Component:
+            if o.key not in self.components:
+                self.components[o.key] = {}
+                print("\tnew rack c '%s'" % (o.key))
+            self.components[o.key].update({o.id: o})
+            #print("\tracked component", o.id)
         else:
-            self.components.update({c.key: [c]})
-            #print("\track entry '%s' added" % (c.key))
-        return c
+            print("unknown object passed to rack.register")
+        return o
