@@ -10,10 +10,12 @@ class Entity:
 
 
 class Component:
+    c_id = 0
     def __init__(self, key):
         assert type(key) is str
+        self.c_id += 1
+        print("\t",self.c_id)
         self.key = key
-
 
 class Rack:
     def __init__(self):
