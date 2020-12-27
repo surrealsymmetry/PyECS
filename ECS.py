@@ -1,7 +1,8 @@
+
 class Entity:
     def __init__(self):
         self.components = {}
-
+        self.id = Rack.fresh_id("Entity")
     def grant(self, c):
         self.components[c.key] = c
         c.entity = self
@@ -10,16 +11,25 @@ class Entity:
 
 
 class Component:
-    c_id = 0
     def __init__(self, key):
         assert type(key) is str
-        self.c_id += 1
-        print("\t",self.c_id)
         self.key = key
+        self.id = Rack.fresh_id("Component")
+
 
 class Rack:
+    tracked_keys = {}
+
+    @staticmethod
+    def fresh_id(key):
+        if key not in Rack.tracked_keys:
+            Rack.tracked_keys[key] = 0
+        fresh_id = "{}_{}".format(key, Rack.tracked_keys[key])
+        Rack.tracked_keys[key] += 1
+        return fresh_id
+
     def __init__(self):
-        self.entities = []
+        self.entities = {}
         self.components = {}
 
     def __repr__(self):  # overrides the output of print(rack_object)
@@ -38,7 +48,7 @@ class Rack:
 
     def request_entity(self):
         e = Entity()
-        self.entities.append(e)
+        self.entities[e.id] = e
         return e
 
     def request_component(self, key):
