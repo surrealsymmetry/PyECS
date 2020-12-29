@@ -3,7 +3,8 @@ import random
 import string
 
 
-def mob_spawn(r, e_spawn=1000, k_spawn=100):
+def populate_manipulate(e_spawn=1000, k_spawn=100):
+    r = ECS.Rack()
     my_entities = []
     component_keys = []
     for i in range(e_spawn):
@@ -26,38 +27,18 @@ def mob_spawn(r, e_spawn=1000, k_spawn=100):
         # print("{} granted {} components".format(i.id, len(i.components)))
     print(r)
 
-    def murderbot(c_to_nuke=30):
-        print("murderbot online")
-        component_keys_to_nuke = []
-        done_selecting = False
-        while not done_selecting:
-            random_component_key = list(r.components.keys())[random.randint(0, len(r.components) - 1)]
-            if random_component_key not in component_keys_to_nuke and random_component_key != "dummy":
-                component_keys_to_nuke.append(random_component_key)
-                if len(component_keys_to_nuke) >= c_to_nuke or len(component_keys_to_nuke) == len(r.components) - 1:
-                    done_selecting = True
-            else:
-                print("\tseeking new target...")
-        print("\n{} targets Acquired!".format(len(component_keys_to_nuke)))
-        nuke = {}
-        for i in component_keys_to_nuke:
-            #print("\t{}:\t{} instances".format(i, len(r.components[i])))
-            #print(r.components[i])
-            for key in r.components[i]:
-                target_c_id = r.components[i].get(key).id
-                #print("popping ", target_c_id, "of entity", r.components[i].get(target_c_id).entity )
-                e = r.components[i].get(target_c_id).entity
-                e_id = r.components[i].get(target_c_id).entity.id
-                nuke.update({e_id : e})
+    def murderbot():
+        print(r.purge(r.entities[list(r.entities.keys())[random.randint(0,len(r.entities))]]))
 
-
-
-
-
-
-
-    f = murderbot
-    s = r.register(ECS.System(("dummy",), (f,)))
+    def divider_function():
+        print("\tmurder ~uwu~\n")
+    function_profile = (murderbot, divider_function)
+    s = r.register(ECS.System(("dummy",), (function_profile), "murderbot"))
+    s.update()
     s.update()
 
     print(r)
+
+def pygame_implementation():
+    import pygame
+

@@ -1,8 +1,9 @@
 class Entity:
     def __init__(self):
         self.components = {}
+
     def __repr__(self):
-        return self.id
+        return self.id + "_OBJ"
 
     def grant(self, c):
         if c.key in self.components:
@@ -16,22 +17,25 @@ class Component:
     def __init__(self, key):
         assert type(key) is str
         self.key = key
+
     def __repr__(self):
-        return "{}_{}".format(self.id,self.key)
+        return "{}_{}_OBJ".format(self.id, self.key)
 
 
 class System:
-    def __init__(self, key_profile, function_profile):  # ordered tuples
+    def __init__(self, key_profile, function_profile, name="UNNAMED"):  # ordered tuples
         self.function_profile = function_profile
         self.key_profile = key_profile
+        self.name = name
 
     def update(self):
-        print(self.id+" update")
+        print("{} ({}) Update".format(self.id, self.name))
         for f in self.function_profile:
             if callable(f):
                 f()
             else:
                 print("uncallable object in system function profile")
+
 
 class Rack:
     def __init__(self):
@@ -59,6 +63,7 @@ class Rack:
 
     def register(self, o):
         o.id = self.fresh_id(type(o).__name__)
+
         if type(o) is Entity:
             self.entities[o.id] = o
         elif type(o) is System:
@@ -73,4 +78,24 @@ class Rack:
             print("unknown object passed to rack.register")
         return o
 
-    #def purge(self):
+    def purge(self, o):
+        print("\tPurging ", o.id)
+
+        def _switch_e():
+            graveyard = {}
+            for key in o.components:
+                graveyard.update({key: o.components[key].id})
+            for key in graveyard:
+                self.components[key].pop(graveyard[key])
+            self.entities.pop(o.id)
+            return "\tDeleted {} and {} components".format(o, len(graveyard))
+
+        def _switch_c():
+            print("switch c")
+            _switch_e(self.entities[o.entity])
+
+        def _switch_s():
+            print("switch s")
+            self.systems.pop(o.id)
+
+        return {"Entity": _switch_e, "Component": _switch_c, "System": _switch_s}[type(o).__name__]()
