@@ -1,4 +1,7 @@
 import ECS
-import ECS_tests
+import ECS_tests as tests
 
-ECS_tests.pygame_implementation()
+
+#tests.populate_manipulate()
+
+tests.pygame_implementation()
