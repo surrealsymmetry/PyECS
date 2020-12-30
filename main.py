@@ -1,7 +1,13 @@
 import ECS
+import ECS_tools as tools
 import ECS_tests as tests
 
+    ###
+    ### Testing ECS
+    ###
 
-#tests.populate_manipulate()
+r = ECS.Rack()
 
-tests.pygame_implementation()
+tests.populate_manipulate(r)
+tests.blueprinting(r)
+tests.inspecting(r)

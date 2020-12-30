@@ -1,46 +1,54 @@
 import ECS_blueprints as blueprints
 
+
+###
+### an Entity is a container for a cluster of components arranged by aspect key
+###
 class Entity:
     def __init__(self):
+        print("\nNew entity")
         self.components = {}
 
     def __repr__(self):
-        return "OBJ "+self.id
+        return "OBJ {}".format(self.id)
 
     def grant(self, c):
         if c.key in self.components:
             print("key {} already exists in entity {}! values being overwritten! ")
         self.components[c.key] = c
         c.entity = self
+        print("\t\tstamped imprint '{}'".format(c.entity.id))
         return c
 
 
+###
+### a Component is an instance of data state defined by aspect key (eg "position" has an x and y value)
+### components compose the state properties of objects
+###
 class Component:
     def __init__(self, key):
+        print("\nNew component '{}'".format(key))
         assert type(key) is str
         self.key = key
 
-        ### if key in blueprint library
-        ### retrieve the lambda as a value
-        ### operate on c with it
-
         if key in blueprints.components:
-            print("Blueprint definition '{}' accepted\n\tcalling {} with argument {}".format(key, blueprints.components[key], type(self).__name__))
+            print("\tknown definition '{}' accepted\n\tinvoking {}({})".format(key, blueprints.components[key],
+                                                                               type(self).__name__))
             blueprints.components.get(key)(self)
 
-
     def __repr__(self):
-        return "{}_{}_OBJ".format(self.id, self.key)
+        return "OBJ {}".format(self.id)
 
 
 class System:
     def __init__(self, key_profile, function_profile, name="UNNAMED"):  # ordered tuples
+        print("New system")
         self.function_profile = function_profile
         self.key_profile = key_profile
         self.name = name
 
     def update(self):
-        #print("{} ({}) Update".format(self.id, self.name))
+        # print("{} ({}) Update".format(self.id, self.name))
         for f in self.function_profile:
             if callable(f):
                 f()
@@ -63,8 +71,10 @@ class Rack:
         msg = "\n\tE|\t" + str(len(self.entities)) + msg + "\n\tS|\t" + str(len(self.systems))
         return msg
 
+    ### IDs are stamped on objects passed to rack.register()
+    ### ID counter categories will by dynamically issued by class
 
-    def fresh_id(self, key):  # keys for this
+    def __fresh_id(self, key):  # only gets called by r.register
         if key not in self.registry_keyring:
             self.registry_keyring[key] = 0
         fresh_id = "{}_{}".format(key, self.registry_keyring[key])
@@ -72,17 +82,18 @@ class Rack:
         return fresh_id
 
     def purge(self, o):
-        print("\tPurging ", o.id)
+        print("\nPurging ", o.id)
 
         def _switch_e():
-            graveyard = {}
+            component_cluster = {}
             for key in o.components:
-                graveyard.update({key: o.components[key].id})
-            for key in graveyard:
-                self.components[key].pop(graveyard[key])
+                component_cluster.update({key: o.components[key].id})
+            for key in component_cluster:
+                self.components[key].pop(component_cluster[key])
+
             self.entities.pop(o.id)
-            print("\tDeleted {} and {} components".format(o, len(graveyard)))
-            return graveyard
+            print("\tDeleted {}\n\tDeleted {}".format(o, list(component_cluster)))
+            return component_cluster
 
         def _switch_c():
             print("switch c")
@@ -94,21 +105,22 @@ class Rack:
 
         return {"Entity": _switch_e, "Component": _switch_c, "System": _switch_s}[type(o).__name__]()
 
-    def register(self, o):
-        o.id = self.fresh_id(type(o).__name__)
+    def register(self, o):  # punches an ID onto every tracked object
+        print("\tregistering {}".format(type(o).__name__))
+        o.id = self.__fresh_id(type(o).__name__)
 
         if type(o) is Entity:
             self.entities[o.id] = o
         elif type(o) is System:
+            o.id = "{}_{}".format(o.id, o.name)
             self.systems[o.id] = o
         elif type(o) is Component:
+            o.id = "{}_{}".format(o.id, o.key)
             if o.key not in self.components:
                 self.components[o.key] = {}
-                # print("\tnew rack c '%s'" % (o.key))
             self.components[o.key].update({o.id: o})
-            # print("\tracked component", o.id)
         else:
             print("unknown object passed to rack.register")
-        o.abort = lambda x : self.purge(o)
+        o.purge = lambda x: self.purge(x)
+        print("\t\tstamped '{}'\n\t\tstamped killswitch".format(o.id))
         return o
-
