@@ -10,5 +10,5 @@ r = ECS.Rack()
 
 #tests.populate_manipulate(r)
 #tests.blueprinting(r)
-#sts.inspecting(r)
-tests.custom_print(r)
+tests.inspecting(r)
+#tests.custom_print(r)

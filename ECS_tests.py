@@ -125,14 +125,14 @@ def custom_print(r):
         ["Heading A"],
         {"indent": 1, "column_width": 20, "columns": 2, "filler": "."},
         ["sandwich", "7.99", "fries", "3.99", "hort dorg", "6.20", "borgar", "9.99"],
-
+        {"indent": 1},
         ["Sub-Heading A"],
-        {"indent": 1, "columns":1 },
+        {"indent": 1, "columns": 1},
         ["This menu posted by borgar gang", "this is like a paragraph i guess", "haha"],
 
         {"indent": 0},
         ["Heading B"],
-        {"indent" :1, "column_width": 20, "columns": 3, "filler": ""},
+        {"indent": 1, "column_width": 20, "columns": 3, "filler": ""},
         ["DAY", "OPEN", "CLOSED"],
         {"filler": "."},
         ["mon", "8am", "10pm",
@@ -143,15 +143,23 @@ def custom_print(r):
          "sat", "8am", "10pm",
          "sun", "CLOSED"]]
 
-    test_series = [
-    ["Heading A"],
-    {"indent": 1, "column_width": 30, "columns": 2},
-    ["sandwich", "7.99", "fries", "3.99", "hort dorg", "6.20", "borgar", "9.99"],
+
+    indent_test = [
+        ["Plants"], {"indent": 1, "columns": 1, "column_width": 200},
+        ["Trees"], {"indent": 1},
+        ["Acacia", "Maple", "Redwood", "oak"], {"indent": -1},
+        ["Vegetables"], {"indent": 1},
+        ["Pepper", "Onion", "Carrot", "Cabbage"], {"indent": 0},
+        ["Animals"], {"indent": 1},
+        ["Birds"], {"indent": 1},
+        ["Swan", "Geese", "Duck", "Humming"], {"indent": -1},
+        ["Bees"], {"indent": 1},
+        ["bumble", "honey", "bees nuts lmao"]
     ]
 
-    pwint.pwint(test_series, 10, "trash", ("nonsense", "more nonsense"), debug=True, bad_keyword = "garbage")
 
-    pwint.pwint(long_test_series, debug=True)
+    pwint.pwint(long_test_series)
+    pwint.pwint(indent_test)
 
     divider_function("Ending test 'pp'")
     return r
