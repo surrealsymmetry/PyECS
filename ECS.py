@@ -111,16 +111,16 @@ class Rack:
 
         if type(o) is Entity:
             self.entities[o.id] = o
-        elif type(o) is System:
-            o.id = "{}_{}".format(o.id, o.name)
-            self.systems[o.id] = o
         elif type(o) is Component:
             o.id = "{}_{}".format(o.id, o.key)
             if o.key not in self.components:
                 self.components[o.key] = {}
             self.components[o.key].update({o.id: o})
+        elif type(o) is System:
+            o.id = "{}_{}".format(o.id, o.name)
+            self.systems[o.id] = o
         else:
             print("unknown object passed to rack.register")
         o.purge = lambda x: self.purge(x)
-        print("\t\tstamped '{}'\n\t\tstamped killswitch".format(o.id))
+        print("\t\tstamped '{}'\n\t\tstamped purge()".format(o.id))
         return o
