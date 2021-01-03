@@ -32,8 +32,7 @@ class Component:
         self.key = key
 
         if key in blueprints.components:
-            print("\tknown definition '{}' accepted\n\tinvoking {}({})".format(key, blueprints.components[key],
-                                                                               type(self).__name__))
+            print("\tknown definition '{}' accepted\n\tinvoking {}({})".format(key, blueprints.components[key],type(self).__name__))
             blueprints.components.get(key)(self)
 
     def __repr__(self):

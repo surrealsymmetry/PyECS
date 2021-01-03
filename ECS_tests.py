@@ -1,8 +1,10 @@
 import ECS
-import ECS_tools as tools
+import ECS_Inspector as tools
 import random
 import string
 import pwint
+
+pp = pwint.pwint
 
 
 def divider_function(msg):
@@ -106,7 +108,7 @@ def inspecting(r):
     tools.inspect(e)
 
     component_keys = []
-    for i in range(23):
+    for i in range(15):
         component_keys.append(
             ''.join(random.choices(string.ascii_uppercase + string.digits, k=(random.randint(4, 10)))))
 
@@ -121,45 +123,29 @@ def inspecting(r):
 
 def custom_print(r):
     divider_function("Starting test 'pp'")
-    long_test_series = [
-        ["Heading A"],
-        {"indent": 1, "column_width": 20, "columns": 2, "filler": "."},
-        ["sandwich", "7.99", "fries", "3.99", "hort dorg", "6.20", "borgar", "9.99"],
-        {"indent": 1},
-        ["Sub-Heading A"],
-        {"indent": 1, "columns": 1},
-        ["This menu posted by borgar gang", "this is like a paragraph i guess", "haha"],
 
-        {"indent": 0},
-        ["Heading B"],
-        {"indent": 1, "column_width": 20, "columns": 3, "filler": ""},
-        ["DAY", "OPEN", "CLOSED"],
-        {"filler": "."},
-        ["mon", "8am", "10pm",
-         "tue", "8am", "8pm",
-         "wed", "8am", "10pm",
-         "thur", "8am", "10pm",
-         "fri", "8am", "10pm",
-         "sat", "8am", "10pm",
-         "sun", "CLOSED"]]
+    _trash_list = []
+    for i in range(20):
+        _piece_of_trash = ''.join(random.choices(string.ascii_uppercase + string.digits, k=(random.randint(3, 10))))
+        _trash_list.append(_piece_of_trash)
+        _piece_of_trash = ''.join(random.choices(string.ascii_uppercase + string.digits, k=(random.randint(10, 30))))
+        _trash_list.append(_piece_of_trash)
 
+    pp([["Printing items in a 2 column adaptive layout"], {"indent": 1, "columns": 2, "column_width": 3, "filler": "."},_trash_list])
+    pp([["Printing trash in a 3 column restrictive layout"],{"indent": 1, "columns": 3, "column_width": 5, "force_width": True, "filler": "-"}, _trash_list])
+    pp([["Printing items in a narrow 5 column restrictive name-sorted layout"],{"key": lambda x : x ,"indent": 1, "columns": 5, "column_width": 3, "force_width": True, "filler": "."}, _trash_list])
 
-    indent_test = [
-        ["Plants"], {"indent": 1, "columns": 1, "column_width": 200},
-        ["Trees"], {"indent": 1},
-        ["Acacia", "Maple", "Redwood", "oak"], {"indent": -1},
-        ["Vegetables"], {"indent": 1},
-        ["Pepper", "Onion", "Carrot", "Cabbage"], {"indent": 0},
-        ["Animals"], {"indent": 1},
-        ["Birds"], {"indent": 1},
-        ["Swan", "Geese", "Duck", "Humming"], {"indent": -1},
-        ["Bees"], {"indent": 1},
-        ["bumble", "honey", "bees nuts lmao"]
-    ]
+    pp([["Length-sorting"], {"indent": 1, "columns": 1, "key": lambda x: len(x)}, _trash_list])
+    pp([["Reverse-length-sorting"], {"indent": 1, "columns": 1, "key": lambda x: len(x), "reverse": True}, _trash_list])
+    pp([["No-sorting"], {"indent": 1, "columns": 1}, _trash_list])
 
+    prose_array = []
+    for i in range(12):
+        prose_array.append("_{}_AAA\nBBB\nCCC".format(''.join(random.choices(string.ascii_uppercase + string.digits, k=(random.randint(4, 10))))))
 
-    pwint.pwint(long_test_series)
-    pwint.pwint(indent_test)
+    pp([["newline sanity test\nSource text\n"],
+        {"indent":0, "columns":1}, [prose_array[0]],{"indent":0}, ["\nNewlines are respected only if its a single item on no indent!\n\nResult:"],
+        {"columns":2, "indent":1}, prose_array])
 
     divider_function("Ending test 'pp'")
     return r
