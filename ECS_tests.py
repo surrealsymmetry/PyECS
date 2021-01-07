@@ -3,7 +3,6 @@ import ECS_Inspector as tools
 import random
 import string
 import pwint
-
 pp = pwint.pwint
 
 
@@ -18,20 +17,20 @@ def populate_manipulate(r, e_spawn=500, k_spawn=40):
     my_entities = []
     component_keys = []
     for i in range(e_spawn):
-        my_entities.append(r.register(ECS.Entity()))
+        my_entities.append(ECS.Entity(r))
 
     for i in range(k_spawn):
         component_keys.append(
             ''.join(random.choices(string.ascii_uppercase + string.digits, k=(random.randint(5, 10)))))
 
     for i in my_entities:
-        i.grant(r.register(ECS.Component("dummy")))
+        i.grant((ECS.Component(r, "dummy")))
         components_to_install = random.randint(20, 30)
         done_selecting = False
         while not done_selecting:
             c_to_add = component_keys[random.randint(1, len(component_keys) - 1)]
             if c_to_add not in i.components:
-                i.grant(r.register(ECS.Component(c_to_add)))
+                i.grant(ECS.Component(r, c_to_add))
                 components_to_install -= 1
                 if components_to_install <= 0:
                     done_selecting = True
@@ -92,37 +91,33 @@ def blueprinting(r):
     return r
 
 
-def inspecting(r):
-    divider_function("Starting test 'inspecting'")
-    e = r.register(ECS.Entity())
-    c = r.register(ECS.Component("color"))
-    e.grant(c)
-    e.grant(r.register(ECS.Component("position")))
+def printing_and_sorting(r):
+    divider_function("Starting test 'printing and sorting'")
+    f_nam = ["becky", "noah", "bri","jasper", "colin", "sandra", "peppin", "eleanor", "chester", "angelina", "grint", "oswald", "fiona", "parker", "trisha", "joanne", "serena"]
+    l_nam = ["dreck", "berd", "auren", "suarez", "peach", "duard", "nona", "poleck","merino", "grant", "chi", "decker", "wolf", "khan", "smith", "durent", "blunt", "parcey" ]
+    for i in range(len(f_nam)):
+        for j in range(len(l_nam)):
+            c = ECS.Component(r, "name") #doc=[["Component Spawning:"]])
+            c.name = "{} {}".format(f_nam[i], l_nam[j])
+            e = ECS.Entity(r) #doc=[["Entity Spawning:"]])
+            e.grant(c)
+            # print("{}\t{} {}".format(e.id, e.components["name"].name[0], e.components["name"].name[1]))
 
-    # tools.inspect_rack(r)
+    print("{} entities spawned".format(len(r.entities)))
 
-    # for id_key in r.components["dummy"]:
-    # tools.inspect_entity(r.components["dummy"].get(id_key).entity)
+    list = []
+    for key in r.entities:
+        e = r.entities[key]
+        name = e.components["name"].name
+        list.append("{} : {}".format(e.id, name))
 
-    # tools.inspect_rack(r)
-    tools.inspect(e)
-
-    component_keys = []
-    for i in range(15):
-        component_keys.append(
-            ''.join(random.choices(string.ascii_uppercase + string.digits, k=(random.randint(4, 10)))))
-
-    for key in component_keys:
-        e.grant(r.register(ECS.Component(key)))
-
-    tools.inspect(e)
-
-    divider_function("Ending test 'inspecting'")
-    return r
-
-
-def custom_print(r):
-    divider_function("Starting test 'pp'")
+    pp([["Unsorted"], {"columns": 4, "column_width":20, "indent":1}, list])
+    pp([["Last Name Sort"], {"columns": 4, "column_width":20, "indent":1,
+                "key":lambda x: x.split(" ")[3]},list])
+    pp([["Reverse First Name Sort"], {"columns": 4, "column_width": 20, "indent": 1,
+                "key": lambda x: x.split(" ")[2], "reverse":True}, list])
+    pp([["Name Length Sort"], {"columns": 4, "column_width": 20, "indent": 1,
+                "key": lambda x: len(x.split(" ")[2] + x.split(" ")[3])}, list])
 
     _trash_list = []
     for i in range(20):
@@ -130,15 +125,6 @@ def custom_print(r):
         _trash_list.append(_piece_of_trash)
         _piece_of_trash = ''.join(random.choices(string.ascii_uppercase + string.digits, k=(random.randint(10, 30))))
         _trash_list.append(_piece_of_trash)
-
-    pp([["Printing items in a 2 column adaptive layout"], {"indent": 1, "columns": 2, "column_width": 3, "filler": "."},_trash_list])
-    pp([["Printing trash in a 3 column restrictive layout"],{"indent": 1, "columns": 3, "column_width": 5, "force_width": True, "filler": "-"}, _trash_list])
-    pp([["Printing items in a narrow 5 column restrictive name-sorted layout"],{"key": lambda x : x ,"indent": 1, "columns": 5, "column_width": 3, "force_width": True, "filler": "."}, _trash_list])
-
-    pp([["Length-sorting"], {"indent": 1, "columns": 1, "key": lambda x: len(x)}, _trash_list])
-    pp([["Reverse-length-sorting"], {"indent": 1, "columns": 1, "key": lambda x: len(x), "reverse": True}, _trash_list])
-    pp([["No-sorting"], {"indent": 1, "columns": 1}, _trash_list])
-
     prose_array = []
     for i in range(12):
         prose_array.append("_{}_AAA\nBBB\nCCC".format(''.join(random.choices(string.ascii_uppercase + string.digits, k=(random.randint(4, 10))))))
@@ -147,5 +133,35 @@ def custom_print(r):
         {"indent":0, "columns":1}, [prose_array[0]],{"indent":0}, ["\nNewlines are respected only if its a single item on no indent!\n\nResult:"],
         {"columns":2, "indent":1}, prose_array])
 
-    divider_function("Ending test 'pp'")
-    return r
+    divider_function("Ending test 'printing_newlines'")
+
+    pp([["Printing items in a 2 column adaptive layout"], {"indent": 1, "columns": 2, "column_width": 3, "filler": "."},_trash_list])
+    pp([["Printing trash in a 3 column restrictive layout"],{"indent": 1, "columns": 3, "column_width": 5, "force_width": True, "filler": "-"}, _trash_list])
+    pp([["Printing items in a narrow 5 column restrictive name-sorted layout"],{"key": lambda x : x ,"indent": 1, "columns": 5, "column_width": 3, "force_width": True, "filler": "."}, _trash_list])
+
+    pp([["Length-sorting"], {"indent": 1, "columns": 1, "key": lambda x: len(x)}, _trash_list])
+    pp([["Reverse-length-sorting"], {"indent": 1, "columns": 1, "key": lambda x: len(x), "reverse": True}, _trash_list])
+    pp([["Unsorted single-column"], {"indent": 1, "columns": 1}, _trash_list])
+
+    divider_function("Ending test 'printing and sorting'")
+
+def inspector(r):
+    divider_function("Beginning test 'inspector'")
+
+    e = ECS.Entity(r)
+    e.grant(ECS.Component(r, "color"))
+    e.grant(ECS.Component(r, "position", 10, 15))
+    e.grant(ECS.Component(r, "age"))
+    #tools.inspect(e)
+    tools.inspect(e.components["position"])
+    divider_function("Ending test 'inspector'")
+
+def ecs_systems(r):
+    divider_function("Beginning test 'ecs_systems'")
+
+    e = ECS.Entity(r)
+    e.grant(ECS.Component(r, "color"))
+    e.grant(ECS.Component(r, "position", 10, 15))
+    e.grant(ECS.Component(r, "age"))
+
+    divider_function("Ending test 'ecs_systems'")

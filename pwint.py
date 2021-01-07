@@ -1,119 +1,127 @@
+state = {  # considered just shoving state into kwargs but idk how id set defaults
+    "columns": 4,
+    "column_width": 10,
+    "indent": 0,  # this value is accessed indirectly, providing indent keys increments position or resets if zero
+    "debug": False,
+    "filler": " ",
+    "force_width": False,
+
+    # kwargs for sort(), again this is removable if kwargs is just queried directly but i like the default values per call
+    "key": 0,  # a function which is passed to sort(key= function )
+    "reverse": False
+}
+
+default_state = state.copy()
+
+# todo make asserts that give pwinty very clear feedback if poorly formed list/dict passed
+
 def pwint(series, *args, **kwargs):
-    print("\n")
     ### items in the series are either lists of strings k:v entries
     ### a k:v entry updates the default values (default values reset for each )
 
-    _state = {  # considered just shoving _state into kwargs but idk how id set defaults
-        "columns": 4,
-        "column_width": 10,
-        "indent": 0,  # this value is accessed indirectly, providing indent keys increments position or resets if zero
-        "debug": False,
-        "filler": " ",
-        "force_width": False,
-
-        # kwargs for sort(), again this is removable if kwargs is just queried directly but i like the default values per call
-        "key": 0,  # a function which is passed to sort(key= function )
-        "reverse": False
-    }
-
     for key in kwargs:
-        if key in _state:
-            _state.update({key: kwargs[key]})
+        if key in state:
+            state.update({key: kwargs[key]})
         else:
-            if _state["debug"]:
+            if state["debug"]:
                 print("|'{0}' is an unknown kwarg, ignoring '{0}'".format(key))
-
-    for arg in args:
-        if _state["debug"]:
-            print("| ignoring argument {}".format(arg))
+    if "preserve" not in kwargs:
+        state.update(default_state.copy())
 
     def indents():
-        # if _state["debug"]:
-        # print("| indents(): {}".format(_state["indent"]))
-        return "{:\t<{}}".format("", _state["indent"])
+        # if state["debug"]:
+        # print("| indents(): {}".format(state["indent"]))
+        return "{:\t<{}}".format("", state["indent"])
 
     for i in series:
         if type(i) is dict:
-            _flag_changes = ""
+            flag_changes = ""
             for key in i:
                 if key == "indent":  # is it indent state information?
                     increment_value = i[key]
 
                     if increment_value == 0:
-                        _state["indent"] = 0
+                        state["indent"] = 0
                     else:
-                        _state["indent"] += i[key]
+                        state["indent"] += i[key]
 
                 else:  # its not indent information  so we'll update state
-                    if _state[key] != i[key]:
-                        _flag_changes += "\n\t| '{}' '{}' (was '{}'), ".format(key, i[key], _state[key])
+                    if state[key] != i[key]:
+                        flag_changes += "\n\t| '{}' '{}' (was '{}'), ".format(key, i[key], state[key])
 
-                    _state.update({key: i[key]})
+                    state.update({key: i[key]})
 
-            if _state["debug"]:
-                if len(_flag_changes) > 0:
-                    _flag_changes = "| FLAG CHANGES:" + _flag_changes
-                    print(_flag_changes)
+            if state["debug"]:
+                if len(flag_changes) > 0:
+                    flag_changes = "| FLAG CHANGES:" + flag_changes
+                    print(flag_changes)
 
 
         elif type(i) is list:
-            _column_counter = 0
-            # initialize the block at the right indent level
-            _doc = indents()
-            _final_width = _state["column_width"]
-            _border_width = 2
+            for j in range(len(i)):
+                i[j] = str(i[j])
+            for j in range(len(i)):
+                assert type(i[j]) is str, "Something in a list resisted the string lifestyle"
 
-            if type(_state["key"]) is int:
+            column_counter = 0
+            # initialize the block at the right indent level
+            doc = indents()
+            final_width = state["column_width"]
+            border_width = 2
+
+            if type(state["key"]) is int: # if the default is present instead of a custom lambda sort
                 sorted_list = i.copy()  # must be a copy! making this a reference to the original list is destructive!
             else:
-                sorted_list = sorted(i, key=_state["key"], reverse=_state["reverse"])
+
+                sorted_list = sorted(i, key=state["key"], reverse=state["reverse"])
             # stripping newlines in columned items
 
             for index_of_string in range(len(sorted_list)):
-                string = sorted_list[index_of_string]
-                _swap = {"\n": " ", " ": " / "}  # blacklisted characters replacement values
-                _done = False
+                swap = {"\n": " ", "\t": " "}  # blacklisted characters replacement values
+                current_string = sorted_list[index_of_string]
+                done = False
                 # strip illegal characters UNLESS its a single item heading or a single column list
 
-                if len(sorted_list) > 1 or _state["indent"] > 0:
-                    while not _done:
-                        for index_of_char in range(len(string)):  # per character
-                            _char = string[index_of_char]
-                            if _char in _swap:
-                                _leading_split = string[0: index_of_char]
-                                _trailing_split = string[index_of_char + 1: len(string)]
+                if len(sorted_list) > 1 or state["indent"] > 0:
+                    while not done:
+                        if len(current_string)>0:
+                            for index_of_char in range(len(current_string)):  # per character
+                                _char = current_string[index_of_char]
 
-                                string = "{}{}{}".format(_leading_split, _swap[_char], _trailing_split)
+                                if _char in swap:
+                                    leading_split = current_string[0: index_of_char]
+                                    trailing_split = current_string[index_of_char + 1: len(current_string)]
+                                    current_string = "{}{}{}".format(leading_split, swap[_char], trailing_split)
+                                    sorted_list[index_of_string] = current_string
 
-                                sorted_list[index_of_string] = string
-                            elif index_of_char >= len(string) - 1:
-                                _done = True
+                                elif index_of_char >= len(current_string) - 1:
+                                    done = True
 
                 # either clip the strings or track max
-                if len(string) >= _state["column_width"]:
-                    if _state["force_width"]:
-                        string = string[0:_final_width]
-                        sorted_list[index_of_string] = string
+                if len(current_string) >= state["column_width"]:
+                    if state["force_width"]:
+                        current_string = current_string[0:final_width]
+                        sorted_list[index_of_string] = current_string
                     else:
-                        if len(string) > _final_width:
-                            _final_width = len(string)
+                        if len(current_string) > final_width:
+                            final_width = len(current_string)
 
-            _last_position = 0
+            last_position = 0
 
-            for string in sorted_list:
-                if 0 < _column_counter < _state["columns"]:  # if current position is between a first and last columns
-                    _filler_to_add = _final_width - _last_position
-                    filler = "{:{}<{}}".format("", _state["filler"], _filler_to_add + _border_width)
-                    _doc += filler
-                if _column_counter >= _state["columns"]:
-                    _doc += "\n{}".format(indents())
-                    _column_counter = 0
+            for current_string in sorted_list:
+                if 0 < column_counter < state["columns"]:  # if current position is between a first and last columns
+                    filler_to_add = final_width - last_position
+                    filler = "{:{}<{}}".format("", state["filler"], filler_to_add + border_width)
+                    doc += filler
+                if column_counter >= state["columns"]:
+                    doc += "\n{}".format(indents())
+                    column_counter = 0
 
-                _doc += "{}".format(string)
-                _last_position = len(string)
-                _column_counter += 1
-            print(_doc)
+                doc += "{}".format(current_string)
+                last_position = len(current_string)
+                column_counter += 1
+            print(doc)
 
         else:
-            if _state["debug"]:
+            if state["debug"]:
                 print("Unknown type {} passed to pwint, ".format(type(i).__name__))

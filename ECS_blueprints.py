@@ -1,19 +1,26 @@
+import random
+import pwint
+pp = pwint.pwint
+import datetime
+
 components = {}
-
-def say(o):
-    print("\t\tconstructing '{}' data".format(o.key))
-
-def position(c):
-    say(c)
-    c.x = 0
-    c.y = 0
+def position(c, x=0, y=0):
+    c.x = x
+    c.y = y
+    pp([["position"],{"columns":2,"indent":1},["x",c.x,"y",c.y]], preserve=True)
     return c
 
 
 def color(c):
-    say(c)
+    def randcolor():
+        return(random.randint(0,255))
+    c.color = (randcolor(), randcolor(), randcolor())
     c.colors = {"bg": (81, 75, 83),
                "hot": (238,160, 185)}
 
-components.update({"position": lambda x: position(x),
-                   "color": lambda x: color(x)})
+def age(c):
+    c.created = datetime.datetime.now()
+
+components.update({"position": lambda x, *args: position(x, *args),
+                   "color": lambda x, *args: color(x, *args),
+                   "age": lambda x, *args: age(x, *args)})
