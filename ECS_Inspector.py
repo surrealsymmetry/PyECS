@@ -1,11 +1,6 @@
 import pwint
 pp = pwint.pwint
 
-inspect_lookup = {}  # keys object class to switch cases for inspect()
-state = {
-    "debug": False
-}
-
 def inspect(o):
     obj_class = type(o).__name__
     _func = inspect_lookup[obj_class]
@@ -37,7 +32,6 @@ def _switch_e(e):
 
 
     pp(doc)
-    return e
 
 def _switch_c(c):
     common_attributes_blacklist = {"key": None, "id": None, "purge": None, "entity": None}
@@ -63,25 +57,18 @@ def _switch_c(c):
             attribute_list]
     pp(doc)
 
-    return []
-
-
 def _switch_s(s):
     print("\tswitch s")
-
-    return []
 
 
 def _switch_r(r, *args, **kwargs):
     print("\tswitch r")
 
-    return []
-
-inspect_lookup.update({
+inspect_lookup = {
     "Entity": _switch_e,
     "Component": _switch_c,
     "System": _switch_s,
-    "Rack": _switch_r})
+    "Rack": _switch_r}
 
 
 

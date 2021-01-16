@@ -22,5 +22,5 @@ def age(c):
     c.created = datetime.datetime.now()
 
 components.update({"position": lambda x, *args: position(x, *args),
-                   "color": lambda x, *args: color(x, *args),
-                   "age": lambda x, *args: age(x, *args)})
+                   "color": lambda x, *args: color(x),
+                   "age": lambda x: age(x)})

@@ -8,7 +8,7 @@ pp = pwint.pwint
 class Entity:
     def __init__(self, r, *args, **kwargs):
         self.components = {}
-        r.register(self, *args, **kwargs)
+        r.register(self)
     def __repr__(self):
         return "OBJ {}".format(self.id)
 
@@ -31,26 +31,47 @@ class Component:
         if key in blueprints.components:
             # keyed to a method lookup that will stamp preset attributes onto this instance of c
             blueprints.components.get(key)(self, *args)
-        r.register(self, *args, **kwargs)
+        r.register(self)
 
     def __repr__(self):
         return "OBJ {}".format(self.id)
 
 
 class System:
-    def __init__(self, r, key_profile, function_profile, name="UNNAMED", *args, **kwargs):  # ordered tuples
-        self.function_profile = function_profile
-        self.key_profile = key_profile
+    def __init__(self, r, name, *args, **kwargs):  # ordered tuples
+        assert type(r) == Rack, "systems must be passed a rack object as first parameter, not {}".format(type(r))
         self.name = name
+        self.aspect_requirements = []
+        for arg in args:
+            assert type(arg) == str, "non string passed to system constructor aspect requirement arg list"
+            self.aspect_requirements.append(arg)
+
+        if "function_profile" in kwargs:
+            self.function_profile = kwargs["function_profile"]
+        else:
+            self.function_profile = []
         r.register(self, *args, **kwargs)
 
-    def update(self):
-        # print("{} ({}) Update".format(self.id, self.name))
-        for f in self.function_profile:
-            if callable(f):
-                f()
-            else:
-                print("uncallable object in system function profile")
+    def update(self, r):
+        subscribed_entities = []
+        first_element_rack = r.components[self.aspect_requirements[0]]
+
+        for id_key in first_element_rack:
+            c = first_element_rack[id_key]
+            meets_requirements = True
+            for i in range(1, len(self.aspect_requirements) - 1):
+                if self.aspect_requirements[i] not in c.entity.components:
+                    meets_requirements = False
+            if meets_requirements:
+                subscribed_entities.append(c.entity)
+
+        for e in subscribed_entities:
+            assert type(e) == Entity, ("Non-Entity object {} pulled into {} subscription queue?".format(e, self.name))
+            for f in self.function_profile:
+                if callable(f):
+                    f(e)
+                else:
+                    print("uncallable object in system function profile")
 
 
 class Rack:
@@ -62,12 +83,8 @@ class Rack:
 
     def __repr__(self):  # overrides the output of print(rack_object)
         msg = "r"
+        doc = []
 
-        """msg = 0
-        for key in self.components:
-            msg += len(self.components[key])
-        msg = "\n\tC|\t" + str(msg) + "\t({} keys)".format(len(self.components))
-        msg = "\n\tE|\t" + str(len(self.entities)) + msg + "\n\tS|\t" + str(len(self.systems))"""
         return msg
 
     ### IDs are stamped on objects passed to rack.register()
@@ -108,9 +125,7 @@ class Rack:
         o.id = self.__fresh_id(type(o).__name__)
         o.purge = lambda x: self.purge(x)
         doc = []
-        if "doc" in kwargs:
-            doc = kwargs["doc"]
-            doc.append({"indent": 1})
+
         doc.append({"columns":4, "column_width":20, "filler":"."})
         def switch_e():
             self.entities[o.id] = o
@@ -130,3 +145,7 @@ class Rack:
 
         {"Entity": switch_e, "Component": switch_c, "System": switch_s}[type(o).__name__]()
         pp(doc)
+
+    def update(self):
+        for id_key in self.systems:
+            self.systems[id_key].update(self)
