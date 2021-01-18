@@ -114,7 +114,7 @@ def inspector(r):
     e = ECS.Entity(r)
     e.grant(ECS.Component(r, "color"))
     e.grant(ECS.Component(r, "position", 10, 15))
-    e.grant(ECS.Component(r, "age"))
+    e.grant(ECS.Component(r, "custom_age"))
     # tools.inspect(e)
     tools.inspect(e.components["position"])
     divider_function("Ending test 'inspector'")
@@ -123,23 +123,25 @@ def inspector(r):
 def ecs_systems(r):
     divider_function("Beginning test 'ecs_systems'")
 
-    e = ECS.Entity(r)
-    e.grant(ECS.Component(r, "color"))
-    e.grant(ECS.Component(r, "position", 10, 15))
-    e.grant(ECS.Component(r, "age"))
+    e = r.e()
+    e.grant(r.c("color"))
+    e.grant(r.c("position", 10, 15))
+    
+    c = r.c("custom_age")
+    c.created = datetime.datetime.now()
+    e.grant(c)
 
     def update_stamp(e):
-        c_age = e.components["age"]
-        c_age.updated = datetime.datetime.now()
+        e.components["custom_age"].updated = datetime.datetime.now()
 
     def print_diff(e):
-        c_age = e.components["age"]
-        diff = c_age.updated - c_age.created
+        c = e.components["custom_age"]
+        diff = c.updated - c.created
         print(diff)
 
-    ECS.System(r, "Time-Updater", "age", function_profile=[update_stamp, print_diff])
+    r.s("Time-Updater", "custom_age", update_stamp, print_diff)
 
-    for i in range(30):
+    for i in range(300):
         for j in r.systems:
             r.systems[j].update(r)
 
@@ -152,7 +154,7 @@ def pygame_systems(r):
     pygame.init()
     screen = pygame.display.set_mode((640, 480))
     background = pygame.Surface(screen.get_size())
-    background.fill((255, 255, 255))
+    background.fill((135, 95, 128))
     background = background.convert()
     
     screen.blit(background, (0, 0))
@@ -161,35 +163,61 @@ def pygame_systems(r):
     FPS = 30
     playtime = 0.0
 
-    e = ECS.Entity(r)
-    e.grant(ECS.Component(r, "position", 50, 100))
-    c = ECS.Component(r, "vector")
+    e = r.e()
+    e.grant(r.c("position", 50, 100))
+    c = r.c("custom_vector")
     c.x = 10
     c.y = 7
     e.grant(c)
 
+    c = r.c("custom_graphic")
+    circle_radius = 20
+    c.sprite = pygame.Surface((circle_radius * 2, circle_radius * 2))
+    pygame.draw.circle(c.sprite, (255, 190, 235), (circle_radius, circle_radius), circle_radius)
+
+    c.sprite = c.sprite.convert_alpha()
+    e.grant(c)
+
+    c = r.c("custom_bounds")
+    c.rect = e.components["custom_graphic"].sprite.get_rect()
+    e.grant(c)
+
     def apply_motion(e):
-        e.components["position"].x += e.components["vector"].x
-        e.components["position"].y += e.components["vector"].y
-        print("{0:.2f},{1:.2f}".format(e.components["position"].x, e.components["position"].y))
+        e.components["position"].x += e.components["custom_vector"].x
+        e.components["position"].y += e.components["custom_vector"].y
 
     def correct_oob(e):
+        pos = (e.components["position"].x, e.components["position"].y)
+        x,y = pos
         maxx, maxy = screen.get_size()
+        maxx -= e.components["custom_bounds"].rect[2]
+        maxy -= e.components["custom_bounds"].rect[3]
 
-        if e.components["position"].x < 0:
-            e.components["vector"].x = -e.components["vector"].x
+        def flip_x(e):
+            e.components["custom_vector"].x *= -1
+        def flip_y(e):
+            e.components["custom_vector"].y *= -1
+
+        if x < 0:
+            flip_x(e)
             e.components["position"].x = 0
-        if e.components["position"].x > maxx:
-            e.components["vector"].x = -e.components["vector"].x
+        if x > maxx:
+            flip_x(e)
             e.components["position"].x = maxx
-        if e.components["position"].y < 0:
-            e.components["vector"].y = -e.components["vector"].y
+        if y < 0:
+            flip_y(e)
             e.components["position"].y = 0
-        if e.components["position"].y > maxy:
-            e.components["vector"].y = -e.components["vector"].y
+        if y > maxy:
+            flip_y(e)
             e.components["position"].y = maxy
 
-    s = ECS.System(r, "Movement", "vector", "position", function_profile=[apply_motion, correct_oob])
+    def draw_thing(e):
+        sprite = e.components["custom_graphic"].sprite
+        pos = (e.components["position"].x, e.components["position"].y)
+        screen.blit(sprite, pos)
+
+    r.s("Movement System", "custom_vector", "custom_bounds", "position", apply_motion, correct_oob)
+    r.s("Render System", "position", "custom_graphic", draw_thing)
 
     while mainloop:
         milliseconds = clock.tick(FPS)
@@ -201,6 +229,7 @@ def pygame_systems(r):
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     mainloop = False
+        screen.blit(background, (0,0))
         r.update()
         # print("X: {} Y: {}".format(e.components["position"].x, e.components["position"].y))
         text = ":FPS: {0:.2f} Playtime: {1:.2f}".format(clock.get_fps(), playtime)
