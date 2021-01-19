@@ -1,6 +1,6 @@
 import ECS_blueprints as blueprints
-import pwint
-pp = pwint.pwint
+import ECS_Inspector as tools
+
 
 ###
 ### an Entity is a container for a cluster of components arranged by aspect key
@@ -38,9 +38,10 @@ class System:
         self.keys = []
         self.functions = []
         for arg in args:
-            self.load(arg)
+            self.__load(arg)
 
-    def load(self, arg):
+    #seperate args into keys or functions
+    def __load(self, arg):
         if type(arg) is str:
             self.keys.append(arg)
         elif callable(arg):
@@ -49,7 +50,7 @@ class System:
             try:
                 iterable_argument = iter(arg)
                 for i in arg:
-                    self.load(i)
+                    self.__load(i)
             except TypeError:
                 raise TypeError("unknown type passed to system.load()")
 
@@ -66,13 +67,14 @@ class System:
             if meets_requirements:
                 subscribed_entities.append(c.entity)
 
+
         for e in subscribed_entities:
             assert type(e) == Entity, ("Non-Entity object {} pulled into {} subscription queue?".format(e, self.name))
             for f in self.functions:
                 if callable(f):
                     f(e)
                 else:
-                    print("uncallable object in system function profile")
+                    print("uncallable object {} in system function profile".format(f))
 
 
 class Rack:
@@ -111,14 +113,17 @@ class Rack:
 
         def switch_e():
             self.entities[o.id] = o
+            print("racked entity", o.id)
         def switch_c():
             o.id = "{}_{}".format(o.id, o.key)
             if o.key not in self.components:
                 self.components[o.key] = {}
             self.components[o.key].update({o.id: o})
+            print("racked component", o.id)
         def switch_s():
             o.id = "{}_{}".format(o.id, o.name)
             self.systems[o.id] = o
+            print("racked system", o.id)
 
         {"Entity": switch_e, "Component": switch_c, "System": switch_s}[type(o).__name__]()
 

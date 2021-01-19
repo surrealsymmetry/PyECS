@@ -15,10 +15,9 @@ default_state = state.copy()
 
 # todo make asserts that give pwinty very clear feedback if poorly formed list/dict passed
 
-def pwint(series, *args, **kwargs):
+def pwint(series, **kwargs):
     ### items in the series are either lists of strings k:v entries
     ### a k:v entry updates the default values (default values reset for each )
-
     for key in kwargs:
         if key in state:
             state.update({key: kwargs[key]})
@@ -72,7 +71,6 @@ def pwint(series, *args, **kwargs):
             if type(state["key"]) is int: # if the default is present instead of a custom lambda sort
                 sorted_list = i.copy()  # must be a copy! making this a reference to the original list is destructive!
             else:
-
                 sorted_list = sorted(i, key=state["key"], reverse=state["reverse"])
             # stripping newlines in columned items
 

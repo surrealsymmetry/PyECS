@@ -34,6 +34,17 @@ def _switch_e(e):
     pp(doc)
 
 def _switch_c(c):
+    doc = [["\nInspecting '{}'".format(c.id)], {"indent": 1}] # is this nicer than the repeated doc.append()s seen above? probably
+
+    if hasattr(c, 'entity'):
+        cluster_list = []
+        e_id = c.entity.id
+        for key in c.entity.components:
+            cluster_list.append("'{}'".format(key))
+        doc += ["Cluster of entity {}".format(e_id)], {"indent":1, "columns":5, "column_width":15, "force_width":False, "filler":" "},cluster_list, {"indent":-1}
+    else:
+        doc += ["Loose Component"]
+
     common_attributes_blacklist = {"key": None, "id": None, "purge": None, "entity": None}
     attribute_list = []
     for attribute in c.__dict__:
@@ -42,24 +53,19 @@ def _switch_c(c):
         else:
             attribute_list.append("{}".format(attribute))
             attribute_list.append(str(getattr(c, attribute)))
-    cluster_list = []
-    for key in c.entity.components:
-        cluster_list.append("'{}'".format(key))
 
-    doc = [] # is this nicer than the repeated doc.append()s seen above? probably
-    doc += [
-        ["\nInspecting '{}'".format(c.id)], {"indent": 1},
-        ["Cluster of entity {}".format(c.entity.id)],
-        {"indent":1, "columns":5, "column_width":15, "force_width":False, "filler":" "},
-            cluster_list,
-        {"indent":-1}, ["Attributes of {}".format(c.id)],
-        {"indent": 1, "force_width": True, "columns": 2, "column_width": 30, "filler": "."},
-            attribute_list]
+    doc += ["Attributes of {}".format(c.id)], {"indent": 1, "force_width": True, "columns": 2, "column_width": 30, "filler": "."}, attribute_list
     pp(doc)
 
 def _switch_s(s):
-    print("\tswitch s")
-
+    function_list_strings = []
+    for f in s.functions:
+        function_list_strings.append(f.__name__)
+    doc = [["Inspecting '{}'".format(s.id)], {"indent":1},
+           ["Aspect key profile of '{}'".format(s.name)], {"indent":1, "columns":1}, s.keys, {"indent":-1},
+           ["Function profile of '{}'".format(s.name)], {"indent":1, "columns":1}, function_list_strings
+           ]
+    pp(doc)
 
 def _switch_r(r, *args, **kwargs):
     print("\tswitch r")

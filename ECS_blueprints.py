@@ -1,15 +1,17 @@
 import random
 import datetime
+import pygame
 
 components = {}
 
 def position(c, *args):
-
     if len(args) > 0:
         assert len(args) == 2, "position component intitialized with ILLEGAL number of arguments"
-
-    c.x = args[0]
-    c.y = args[1]
+        c.x = args[0]
+        c.y = args[1]
+    else:
+        c.x = 0
+        c.y = 0
     return c
 
 
@@ -23,7 +25,14 @@ def color(c):
 def age(c):
     c.created = datetime.datetime.now()
 
+def graphic(c):
+    c.bounds = None
+    c.sprite = None
+    c.layer = 0
+    return c
+
 components.update({"position"   : lambda x, *args: position(x, *args),
-                   "color"      : lambda x, *args: color(x, *args),
-                   "age"        : lambda x, *args: age(x, *args)
+                   "color"      : lambda x, *args: color(x),
+                   "age"        : lambda x, *args: age(x),
+                   "graphic"        : lambda x, *args: graphic(x),
                    })

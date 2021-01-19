@@ -18,8 +18,8 @@ def blueprinting(r):
     divider_function("Beginning test 'blueprinting'")
 
     def spawn_one():
-        e = ECS.Entity(r)
-        c = ECS.Component(r, "position")
+        e = r.e()
+        c = r.c("position")
         c.x = 3
         e.grant(c)
 
@@ -31,7 +31,7 @@ def blueprinting(r):
     print("\t Entity is at X: {} Y:{}".format(e.components["position"].x, e.components["position"].y))
 
     e_2 = spawn_one()
-    e_2.grant(ECS.Component(r, "color"))
+    e_2.grant(r.c("color"))
 
     tools.inspect(e_2)
     tools.inspect(e_2.components["color"])
@@ -52,9 +52,9 @@ def printing_and_sorting(r):
              "wolf", "khan", "smith", "durent", "blunt", "parcey"]
     for i in range(len(f_nam)):
         for j in range(len(l_nam)):
-            c = ECS.Component(r, "name")  # doc=[["Component Spawning:"]])
+            c = r.c("name")  # doc=[["Component Spawning:"]])
             c.name = "{} {}".format(f_nam[i], l_nam[j])
-            e = ECS.Entity(r)  # doc=[["Entity Spawning:"]])
+            e = r.e()  # doc=[["Entity Spawning:"]])
             e.grant(c)
             # print("{}\t{} {}".format(e.id, e.components["name"].name[0], e.components["name"].name[1]))
 
@@ -111,12 +111,12 @@ def printing_and_sorting(r):
 def inspector(r):
     divider_function("Beginning test 'inspector'")
 
-    e = ECS.Entity(r)
-    e.grant(ECS.Component(r, "color"))
-    e.grant(ECS.Component(r, "position", 10, 15))
-    e.grant(ECS.Component(r, "custom_age"))
+    e = r.e()
+    e.grant(r.c("color"))
+    e.grant(r.c("position", 10, 15))
+    e.grant(r.c("custom_age"))
     # tools.inspect(e)
-    tools.inspect(e.components["position"])
+    #tools.inspect(e.components["position"])
     divider_function("Ending test 'inspector'")
 
 
@@ -195,8 +195,10 @@ def pygame_systems(r):
 
         def flip_x(e):
             e.components["custom_vector"].x *= -1
+            print("bink")
         def flip_y(e):
             e.components["custom_vector"].y *= -1
+            print("bonk")
 
         if x < 0:
             flip_x(e)
@@ -211,6 +213,7 @@ def pygame_systems(r):
             flip_y(e)
             e.components["position"].y = maxy
 
+
     def draw_thing(e):
         sprite = e.components["custom_graphic"].sprite
         pos = (e.components["position"].x, e.components["position"].y)
@@ -218,6 +221,9 @@ def pygame_systems(r):
 
     r.s("Movement System", "custom_vector", "custom_bounds", "position", apply_motion, correct_oob)
     r.s("Render System", "position", "custom_graphic", draw_thing)
+
+    for key in r.systems:
+        tools.inspect(r.systems[key])
 
     while mainloop:
         milliseconds = clock.tick(FPS)
