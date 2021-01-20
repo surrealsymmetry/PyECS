@@ -114,9 +114,8 @@ def inspector(r):
     e = r.e()
     e.grant(r.c("color"))
     e.grant(r.c("position", 10, 15))
-    e.grant(r.c("custom_age"))
-    # tools.inspect(e)
-    #tools.inspect(e.components["position"])
+    tools.inspect(e)
+    tools.inspect(e.components["position"])
     divider_function("Ending test 'inspector'")
 
 
@@ -126,9 +125,10 @@ def ecs_systems(r):
     e = r.e()
     e.grant(r.c("color"))
     e.grant(r.c("position", 10, 15))
-    
+
     c = r.c("custom_age")
     c.created = datetime.datetime.now()
+    print("#######", c.created)
     e.grant(c)
 
     def update_stamp(e):
@@ -139,11 +139,10 @@ def ecs_systems(r):
         diff = c.updated - c.created
         print(diff)
 
-    r.s("Time-Updater", "custom_age", update_stamp, print_diff)
+    s = r.s("Time-Updater", "custom_age", update_stamp, print_diff)
 
     for i in range(300):
-        for j in r.systems:
-            r.systems[j].update(r)
+        s.update(r)
 
     divider_function("Ending test 'ecs_systems'")
 
@@ -156,18 +155,15 @@ def pygame_systems(r):
     background = pygame.Surface(screen.get_size())
     background.fill((135, 95, 128))
     background = background.convert()
-    
+
     screen.blit(background, (0, 0))
     clock = pygame.time.Clock()
     mainloop = True
-    FPS = 30
-    playtime = 0.0
 
     e = r.e()
     e.grant(r.c("position", 50, 100))
     c = r.c("custom_vector")
-    c.x = 10
-    c.y = 7
+    c.x,c.y = screen.get_size()
     e.grant(c)
 
     c = r.c("custom_graphic")
@@ -182,9 +178,27 @@ def pygame_systems(r):
     c.rect = e.components["custom_graphic"].sprite.get_rect()
     e.grant(c)
 
+    e_timer = r.e()
+    c_timer = e_timer.grant(r.c("custom_timer"))
+
+    def nudge_timer(e):
+        c = e.components["custom_timer"]
+        if not hasattr(c, 'delta'):
+            print("timer delta initialized")
+            c.delta = 0
+        if not hasattr(c, 'total'):
+            c.total = 0
+            print("timer total initialized")
+        c.delta = clock.tick(60)    # hard coded fps
+        c.total += (c.delta / 1000)
+
     def apply_motion(e):
-        e.components["position"].x += e.components["custom_vector"].x
-        e.components["position"].y += e.components["custom_vector"].y
+        c = None
+        for key in r.components["custom_timer"]:        #this is really wack, im iterating over the list to grab a single unique item because i dont know the key?
+            c = r.components["custom_timer"].get(key)
+        delta_ms = c.delta
+        e.components["position"].x += delta_ms/1000 * e.components["custom_vector"].x
+        e.components["position"].y += delta_ms/1000 * e.components["custom_vector"].y
 
     def correct_oob(e):
         pos = (e.components["position"].x, e.components["position"].y)
@@ -215,10 +229,13 @@ def pygame_systems(r):
 
 
     def draw_thing(e):
+        tools.inspect(e)
         sprite = e.components["custom_graphic"].sprite
         pos = (e.components["position"].x, e.components["position"].y)
         screen.blit(sprite, pos)
 
+
+    r.s("Game Timer System", "custom_timer", nudge_timer)
     r.s("Movement System", "custom_vector", "custom_bounds", "position", apply_motion, correct_oob)
     r.s("Render System", "position", "custom_graphic", draw_thing)
 
@@ -226,9 +243,6 @@ def pygame_systems(r):
         tools.inspect(r.systems[key])
 
     while mainloop:
-        milliseconds = clock.tick(FPS)
-        playtime += milliseconds / 1000
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 mainloop = False
@@ -237,11 +251,13 @@ def pygame_systems(r):
                     mainloop = False
         screen.blit(background, (0,0))
         r.update()
+        if c_timer.total > 4:
+            mainloop = False
         # print("X: {} Y: {}".format(e.components["position"].x, e.components["position"].y))
-        text = ":FPS: {0:.2f} Playtime: {1:.2f}".format(clock.get_fps(), playtime)
+        text = ":FPS: {0:.2f} Playtime: {1:.2f}".format(clock.get_fps(), c_timer.total)
         pygame.display.set_caption(text)
         pygame.display.flip()
 
     pygame.quit()
-    print("Game played for {0:.2f} seconds".format(playtime))
+    print("Game played for {0:.2f} seconds".format(c_timer.total))
     divider_function("Ending test 'pygame_systems'")

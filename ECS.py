@@ -1,4 +1,4 @@
-import ECS_blueprints as blueprints
+import c_def as blueprints
 import ECS_Inspector as tools
 
 
@@ -23,12 +23,12 @@ class Entity:
 ### components compose the state properties of objects
 ###
 class Component:
-    def __init__(self, key, *args):
+    def __init__(self, key, *args, **kwargs):
         assert type(key) is str and len(key) > 0, "Component provided invalid aspect key '{}'".format(key)
         self.key = key
         if key in blueprints.components:
             # keyed to a method lookup that will stamp preset attributes onto this instance of c
-            blueprints.components.get(key)(self, *args)
+            blueprints.components.get(key)(self, *args, **kwargs)
 
     def __repr__(self):
         return "OBJ {}".format(self.id)
@@ -61,7 +61,8 @@ class System:
         for id_key in first_element_rack:
             c = first_element_rack[id_key]
             meets_requirements = True
-            for i in range(1, len(self.functions) - 1):
+
+            for i in range(len(self.keys)):
                 if self.keys[i] not in c.entity.components:
                     meets_requirements = False
             if meets_requirements:
@@ -97,8 +98,8 @@ class Rack:
         e = Entity()
         self.register(e)
         return e
-    def c(self, key, *args):
-        c = Component(key, *args)
+    def c(self, key, *args, **kwargs):
+        c = Component(key, *args, **kwargs)
         self.register(c)
         return c
     def s(self, name, *args):

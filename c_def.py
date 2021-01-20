@@ -25,14 +25,27 @@ def color(c):
 def age(c):
     c.created = datetime.datetime.now()
 
-def graphic(c):
-    c.bounds = None
-    c.sprite = None
-    c.layer = 0
+def graphic(c, **kwargs):
+    attr = {
+        'bounds':None,
+        'sprite':None,
+        'layer':0}
+
+    for key in kwargs:
+        attr.update({key: kwargs[key]})
+
+    for key in attr:
+        setattr(c, key, attr[key])
+
     return c
+
+def timer(c):
+    c.delta = 0
+    c.total = 0
 
 components.update({"position"   : lambda x, *args: position(x, *args),
                    "color"      : lambda x, *args: color(x),
                    "age"        : lambda x, *args: age(x),
-                   "graphic"        : lambda x, *args: graphic(x),
+                   "graphic"    : lambda x, **kwargs: graphic(x, **kwargs),
+                   "timer"      : lambda x : timer(x),
                    })
