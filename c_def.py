@@ -2,6 +2,15 @@ import random
 import datetime
 import pygame
 
+def bounds(c, *args):
+    if len(args) > 0:
+        assert len(args) == 2, "bounds component intitialized with ILLEGAL number of arguments"
+        c.x = args[0]
+        c.y = args[1]
+    else:
+        c.x = 0
+        c.y = 0
+    return c
 
 def position(c, *args):
     if len(args) > 0:
@@ -46,10 +55,3 @@ def timer(c):
     c.delta = 0
     c.total = 0
 
-
-components = {"position": lambda x, *args: position(x, *args),
-              "color": lambda x, *args: color(x),
-              "age": lambda x, *args: age(x),
-              "graphic": lambda x, **kwargs: graphic(x, **kwargs),
-              "timer": lambda x: timer(x),
-              }

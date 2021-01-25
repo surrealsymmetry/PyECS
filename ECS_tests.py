@@ -1,4 +1,4 @@
-import ECS
+import rack
 import ECS_Inspector as tools
 import random
 import string
@@ -14,12 +14,12 @@ def divider_function(msg):
     print("{}{:-^70}{}".format(_deco, msg, _deco))
 
 
-def blueprinting(r):
+def blueprinting():
     divider_function("Beginning test 'blueprinting'")
 
     def spawn_one():
-        e = r.e()
-        c = r.c("position")
+        e = rack.e()
+        c = rack.c("position")
         c.x = 3
         e.grant(c)
 
@@ -31,7 +31,7 @@ def blueprinting(r):
     print("\t Entity is at X: {} Y:{}".format(e.components["position"].x, e.components["position"].y))
 
     e_2 = spawn_one()
-    e_2.grant(r.c("color"))
+    e_2.grant(rack.c("color"))
 
     tools.inspect(e_2)
     tools.inspect(e_2.components["color"])
@@ -41,10 +41,9 @@ def blueprinting(r):
         e_2.components["color"].colors["hot"][1],
         e_2.components["color"].colors["hot"][2]))
     divider_function("Ending test 'blueprinting'")
-    return r
 
 
-def printing_and_sorting(r):
+def printing_and_sorting():
     divider_function("Starting test 'printing and sorting'")
     f_nam = ["becky", "noah", "bri", "jasper", "colin", "sandra", "peppin", "eleanor", "chester", "angelina", "grint",
              "oswald", "fiona", "parker", "trisha", "joanne", "serena"]
@@ -52,17 +51,17 @@ def printing_and_sorting(r):
              "wolf", "khan", "smith", "durent", "blunt", "parcey"]
     for i in range(len(f_nam)):
         for j in range(len(l_nam)):
-            c = r.c("name")  # doc=[["Component Spawning:"]])
+            c = rack.c("name")  # doc=[["Component Spawning:"]])
             c.name = "{} {}".format(f_nam[i], l_nam[j])
-            e = r.e()  # doc=[["Entity Spawning:"]])
+            e = rack.e()  # doc=[["Entity Spawning:"]])
             e.grant(c)
             # print("{}\t{} {}".format(e.id, e.components["name"].name[0], e.components["name"].name[1]))
 
-    print("{} entities spawned".format(len(r.entities)))
+    print("{} entities spawned".format(len(rack.entities)))
 
     list = []
-    for key in r.entities:
-        e = r.entities[key]
+    for key in rack.entities:
+        e = rack.entities[key]
         if "name" in e.components:
             name = e.components["name"].name
             list.append("{} : {}".format(e.id, name))
@@ -108,25 +107,25 @@ def printing_and_sorting(r):
     divider_function("Ending test 'printing and sorting'")
 
 
-def inspector(r):
+def inspector():
     divider_function("Beginning test 'inspector'")
 
-    e = r.e()
-    e.grant(r.c("color"))
-    e.grant(r.c("position", 10, 15))
+    e = rack.e()
+    e.grant(rack.c("color"))
+    e.grant(rack.c("position", 10, 15))
     tools.inspect(e)
     tools.inspect(e.components["position"])
     divider_function("Ending test 'inspector'")
 
 
-def ecs_systems(r):
+def ecs_systems():
     divider_function("Beginning test 'ecs_systems'")
 
-    e = r.e()
-    e.grant(r.c("color"))
-    e.grant(r.c("position", 10, 15))
+    e = rack.e()
+    e.grant(rack.c("color"))
+    e.grant(rack.c("position", 10, 15))
 
-    c = r.c("custom_age")
+    c = rack.c("custom_age")
     c.created = datetime.datetime.now()
     print("#######", c.created)
     e.grant(c)
@@ -139,15 +138,15 @@ def ecs_systems(r):
         diff = c.updated - c.created
         print(diff)
 
-    s = r.s("Time-Updater", "custom_age", update_stamp, print_diff)
+    s = rack.s("Time-Updater", "custom_age", update_stamp, print_diff)
 
     for i in range(300):
-        s.update(r)
+        s.update(rack)
 
     divider_function("Ending test 'ecs_systems'")
 
 
-def pygame_systems(r):
+def pygame_systems():
     divider_function("Starting test 'pygame_systems'")
 
     pygame.init()
@@ -160,13 +159,13 @@ def pygame_systems(r):
     clock = pygame.time.Clock()
     mainloop = True
 
-    e = r.e()
-    e.grant(r.c("position", 50, 100))
-    c = r.c("custom_vector")
+    e = rack.e()
+    e.grant(rack.c("position", 50, 100))
+    c = rack.c("custom_vector")
     c.x,c.y = screen.get_size()
     e.grant(c)
 
-    c = r.c("custom_graphic")
+    c = rack.c("custom_graphic")
     circle_radius = 20
     c.sprite = pygame.Surface((circle_radius * 2, circle_radius * 2))
     pygame.draw.circle(c.sprite, (255, 190, 235), (circle_radius, circle_radius), circle_radius)
@@ -174,12 +173,12 @@ def pygame_systems(r):
     c.sprite = c.sprite.convert_alpha()
     e.grant(c)
 
-    c = r.c("custom_bounds")
+    c = rack.c("custom_bounds")
     c.rect = e.components["custom_graphic"].sprite.get_rect()
     e.grant(c)
 
-    e_timer = r.e()
-    c_timer = e_timer.grant(r.c("custom_timer"))
+    e_timer = rack.e()
+    c_timer = e_timer.grant(rack.c("custom_timer"))
 
     def nudge_timer(e):
         c = e.components["custom_timer"]
@@ -194,8 +193,8 @@ def pygame_systems(r):
 
     def apply_motion(e):
         c = None
-        for key in r.components["custom_timer"]:        #this is really wack, im iterating over the list to grab a single unique item because i dont know the key?
-            c = r.components["custom_timer"].get(key)
+        for key in rack.components["custom_timer"]:        #this is really wack, im iterating over the list to grab a single unique item because i dont know the key?
+            c = rack.components["custom_timer"].get(key)
         delta_ms = c.delta
         e.components["position"].x += delta_ms/1000 * e.components["custom_vector"].x
         e.components["position"].y += delta_ms/1000 * e.components["custom_vector"].y
@@ -229,18 +228,18 @@ def pygame_systems(r):
 
 
     def draw_thing(e):
-        tools.inspect(e)
+        #tools.inspect(e)
         sprite = e.components["custom_graphic"].sprite
         pos = (e.components["position"].x, e.components["position"].y)
         screen.blit(sprite, pos)
 
 
-    r.s("Game Timer System", "custom_timer", nudge_timer)
-    r.s("Movement System", "custom_vector", "custom_bounds", "position", apply_motion, correct_oob)
-    r.s("Render System", "position", "custom_graphic", draw_thing)
+    rack.s("Game Timer System", "custom_timer", nudge_timer)
+    rack.s("Movement System", "custom_vector", "custom_bounds", "position", apply_motion, correct_oob)
+    rack.s("Render System", "position", "custom_graphic", draw_thing)
 
-    for key in r.systems:
-        tools.inspect(r.systems[key])
+    for key in rack.systems:
+        tools.inspect(rack.systems[key])
 
     while mainloop:
         for event in pygame.event.get():
@@ -250,7 +249,7 @@ def pygame_systems(r):
                 if event.key == pygame.K_ESCAPE:
                     mainloop = False
         screen.blit(background, (0,0))
-        r.update()
+        rack.update()
         if c_timer.total > 4:
             mainloop = False
         # print("X: {} Y: {}".format(e.components["position"].x, e.components["position"].y))

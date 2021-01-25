@@ -1,13 +1,31 @@
-import c_def as blueprints
-import ECS_Inspector as tools
-
-
+import c_def
+import rack
 ###
 ### an Entity is a container for a cluster of components arranged by aspect key
 ###
 class Entity:
-    def __init__(self):
+    def __init__(self, *args):
         self.components = {}
+
+        for arg in args:
+            if len(args) > 0:
+                if isinstance(arg, Component):
+                    self.grant(arg)
+                elif type(arg) is str:
+                    i = Component(arg)
+                    self.grant(i)
+                else:
+                    try:
+                        iterable_thing = iter(arg)
+                        for i in arg:
+                            if type(i) is str:
+                                i = Component(i)
+                            else:
+                                assert isinstance(arg, Component), "Entity constructor passed an iterable arg with a non-Component inside"
+                            self.grant(i)
+                    except TypeError:
+                        raise TypeError("Entity constructor passed non iterable, non-Component arg")
+
     def __repr__(self):
         return "OBJ {}".format(self.id)
 
@@ -26,9 +44,11 @@ class Component:
     def __init__(self, key, *args, **kwargs):
         assert type(key) is str and len(key) > 0, "Component provided invalid aspect key '{}'".format(key)
         self.key = key
-        if key in blueprints.components:
-            # keyed to a method lookup that will stamp preset attributes onto this instance of c
-            blueprints.components.get(key)(self, *args, **kwargs)
+        if hasattr(c_def, key):
+            print("Component: Definition '{}' initialized".format(key))
+            getattr(c_def, key)(self, *args, **kwargs)
+        else:
+            print("Component: Undefined '{}' initialized".format(key))
 
     def __repr__(self):
         return "OBJ {}".format(self.id)
@@ -54,22 +74,8 @@ class System:
             except TypeError:
                 raise TypeError("unknown type passed to system.load()")
 
-    def update(self, r):
-        subscribed_entities = []
-        first_element_rack = r.components[self.keys[0]]
-
-        for id_key in first_element_rack:
-            c = first_element_rack[id_key]
-            meets_requirements = True
-
-            for i in range(len(self.keys)):
-                if self.keys[i] not in c.entity.components:
-                    meets_requirements = False
-            if meets_requirements:
-                subscribed_entities.append(c.entity)
-
-
-        for e in subscribed_entities:
+    def update(self, subscribed_set):
+        for e in subscribed_set:
             assert type(e) == Entity, ("Non-Entity object {} pulled into {} subscription queue?".format(e, self.name))
             for f in self.functions:
                 if callable(f):
@@ -78,81 +84,3 @@ class System:
                     print("uncallable object {} in system function profile".format(f))
 
 
-class Rack:
-    def __init__(self):
-        self.entities = {}
-        self.components = {}
-        self.systems = {}
-        self.registry_keyring = {}
-
-    ### IDs are stamped on objects passed to rack.register()
-    ### ID counter categories will by dynamically issued by class
-    def __fresh_id(self, class_key):  # only gets called by r.register
-        if class_key not in self.registry_keyring:
-            self.registry_keyring[class_key] = 0
-        fresh_id = "{}_{}".format( class_key[0:1], self.registry_keyring[class_key])
-        self.registry_keyring[class_key] += 1
-        return fresh_id
-
-    def e(self):
-        e = Entity()
-        self.register(e)
-        return e
-    def c(self, key, *args, **kwargs):
-        c = Component(key, *args, **kwargs)
-        self.register(c)
-        return c
-    def s(self, name, *args):
-        s = System(args)
-        s.name = name
-        self.register(s)
-        return s
-
-    def register(self, o):  # punches an ID onto every tracked object
-        o.id = self.__fresh_id(type(o).__name__)
-        o.purge = lambda x: self.purge(x)
-
-        def switch_e():
-            self.entities[o.id] = o
-            print("racked entity", o.id)
-        def switch_c():
-            o.id = "{}_{}".format(o.id, o.key)
-            if o.key not in self.components:
-                self.components[o.key] = {}
-            self.components[o.key].update({o.id: o})
-            print("racked component", o.id)
-        def switch_s():
-            o.id = "{}_{}".format(o.id, o.name)
-            self.systems[o.id] = o
-            print("racked system", o.id)
-
-        {"Entity": switch_e, "Component": switch_c, "System": switch_s}[type(o).__name__]()
-
-
-    def purge(self, o):
-        print("\nPurging ", o.id)
-
-        def switch_e():
-            component_cluster = {}
-            for key in o.components:
-                component_cluster.update({key: o.components[key].id})
-            for key in component_cluster:
-                self.components[key].pop(component_cluster[key])
-
-            self.entities.pop(o.id)
-            print("\tDeleted {}\n\tDeleted {}".format(o, list(component_cluster)))
-            return component_cluster
-
-        def switch_c():
-            print("Purging Component {}".format(o.id))
-            switch_e(self.entity)
-
-        def switch_s():
-            print("switch s")
-            self.systems.pop(o.id)
-
-        {"Entity": switch_e, "Component": switch_c, "System": switch_s}[type(o).__name__]()
-
-    def update(self):
-        for id_key in self.systems:
-            self.systems[id_key].update(self)
