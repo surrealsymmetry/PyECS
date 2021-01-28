@@ -1,9 +1,9 @@
+
 import s_def as s
 import rack
 import ECS_Inspector as tools
 import PyG
-import ECS_tests as tests
-
+#import ECS_tests as tests
 
 #tests.blueprinting()
 #tests.printing_and_sorting()
@@ -13,12 +13,13 @@ import ECS_tests as tests
 
 
 rack.s("Timer System", "timer", s.nudge_timer)
-rack.s("Render System", "position", s.prep_sprites, s.render)
+rack.s("Render System", "position", "visible", s.prep_sprites, s.render)
 
-c_position = rack.c("position", 50, 100)
-c_bounds = rack.c("bounds", 200, 200)
-e_map = rack.e(c_position, c_bounds)
-tools.inspect(e_map)
+
+e_map = rack.e()
+e_map.grant(rack.c("position", 50, 100))
+e_map.grant(rack.c("bounds", 200, 200))
+e_map.grant(rack.c("visible"))
 
 PyG.run()
 
