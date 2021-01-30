@@ -37,17 +37,17 @@ def register(o):  # punches an ID onto every tracked object
 
     def switch_e():
         entities[o.id] = o
-        print("racked entity", o.id)
+        #print("racked entity", o.id)
     def switch_c():
         o.id = "{}_{}".format(o.id, o.key)
         if o.key not in components:
             components[o.key] = {}
         components[o.key].update({o.id: o})
-        print("racked component", o.id)
+        #print("racked component", o.id)
     def switch_s():
         o.id = "{}_{}".format(o.id, o.name)
         systems[o.id] = o
-        print("racked system", o.id)
+        #print("racked system", o.id)
 
     {"Entity": switch_e, "Component": switch_c, "System": switch_s}[type(o).__name__]()
 
@@ -75,14 +75,19 @@ def purge(o):
 
     {"Entity": switch_e, "Component": switch_c, "System": switch_s}[type(o).__name__]()
 
+
+update_number = 0
 def update():
+    global update_number
+    update_number += 1
+    #print("Update {}".format(update_number))
+
     for id_key in systems:
         sys = systems[id_key]
         subscribed_set = []
 
-        if  sys.keys[0] in components:
+        if sys.keys[0] in components:
             first_element_rack = components[sys.keys[0]]
-
             for id_key in first_element_rack:
                 c = first_element_rack[id_key]
                 meets_requirements = True

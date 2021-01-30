@@ -11,9 +11,7 @@ screen.blit(background, (0,0))
 clock = pygame.time.Clock()
 
 mainloop = True
-c_timer = rack.c("timer")
-e = rack.e()
-e.grant(c_timer)
+e_timer = rack.e(rack.c("pygame_global_timer"))
 
 def run():
     global mainloop
@@ -26,6 +24,6 @@ def run():
                     mainloop = False
         screen.blit(background, (0, 0))
         rack.update()
-        text = ":FPS: {0:.2f} Playtime: {1:.2f}".format(clock.get_fps(), c_timer.total)
+        text = ":FPS: {0:.2f} Playtime: {1:.2f}".format(clock.get_fps(), e_timer.components["pygame_global_timer"].total)
         pygame.display.set_caption(text)
         pygame.display.flip()

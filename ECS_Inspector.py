@@ -15,9 +15,6 @@ def _switch_e(e):
         attribute_list = []
 
         for attribute in e.components.get(key).__dict__:
-            # attribute_value_type = type(getattr(e.components[key], attribute)).__name__
-            # print(attribute_value_type)
-
             if attribute in common_attributes_blacklist:
                 common_attributes_blacklist.update({ attribute : str(getattr(e.components[key], attribute))})
             else:

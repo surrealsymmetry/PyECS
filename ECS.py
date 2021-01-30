@@ -8,23 +8,16 @@ class Entity:
         self.components = {}
 
         for arg in args:
-            if len(args) > 0:
-                if isinstance(arg, Component):
-                    self.grant(arg)
-                elif type(arg) is str:
-                    i = Component(arg)
-                    self.grant(i)
-                else:
-                    try:
-                        iterable_thing = iter(arg)
-                        for i in arg:
-                            if type(i) is str:
-                                i = Component(i)
-                            else:
-                                assert isinstance(arg, Component), "Entity constructor passed an iterable arg with a non-Component inside"
-                            self.grant(i)
-                    except TypeError:
-                        raise TypeError("Entity constructor passed non iterable, non-Component arg")
+            if isinstance(arg, Component):
+                self.grant(arg)
+            else:
+                try:
+                    iterable_thing = iter(arg)
+                    for i in arg:
+                        assert isinstance(arg, Component), "Entity constructor passed an iterable arg with a non-Component inside"
+                        self.grant(i)
+                except TypeError:
+                    raise TypeError("Entity constructor passed non iterable, non-Component arg")
 
     def __repr__(self):
         return "OBJ {}".format(self.id)
@@ -45,10 +38,12 @@ class Component:
         assert type(key) is str and len(key) > 0, "Component provided invalid aspect key '{}'".format(key)
         self.key = key
         if hasattr(c_def, key):
-            print("Component: Definition '{}' initialized".format(key))
+            #print("Component: Definition '{}' initialized".format(key))
+            # get the function with the attribute name from c_def module and invoke it
             getattr(c_def, key)(self, *args, **kwargs)
         else:
-            print("Component: Undefined '{}' initialized".format(key))
+            #print("Component: Undefined '{}' initialized".format(key))
+            pass
 
     def __repr__(self):
         return "OBJ {}".format(self.id)
